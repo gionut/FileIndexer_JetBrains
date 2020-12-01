@@ -1,0 +1,17 @@
+There are three general-purpose Set implementations — HashSet, TreeSet, and LinkedHashSet. 
+Which of these three to use is generally straightforward.
+HashSet is much faster than TreeSet (constant-time versus log-time for most operations)
+but offers no ordering guarantees. If you need to use the operations in the SortedSet interface,
+or if value-ordered iteration is required, use TreeSet; otherwise, use HashSet. 
+It's a fair bet that you'll end up using HashSet most of the time.
+
+One thing worth keeping in mind about HashSet is that iteration is linear in the sum 
+of the number of entries and the number of buckets (the capacity). 
+Thus, choosing an initial capacity that's too high can waste both space and time.
+On the other hand, choosing an initial capacity that's too low wastes time by copying 
+the data structure each time it's forced to increase its capacity. 
+If you don't specify an initial capacity, the default is 16. In the past, 
+there was some advantage to choosing a prime number as the initial capacity. 
+This is no longer true. Internally, the capacity is always rounded up to a power of two. 
+The initial capacity is specified by using the int constructor. The following line of 
+code allocates a HashSet whose initial capacity is 64.
