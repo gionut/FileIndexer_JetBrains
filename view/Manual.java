@@ -1,10 +1,5 @@
 package view;
 
-import model.Tokenizer;
-import service.Service;
-
-import java.io.IOException;
-
 public class Manual extends Command {
     View view;
 

@@ -9,5 +9,4 @@ public interface Tokenizer {
                         used by each implementing class
      */
     String[] tokenize(String text);
-    String getKeyword();
 }

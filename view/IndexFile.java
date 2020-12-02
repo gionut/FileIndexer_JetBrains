@@ -24,6 +24,10 @@ public class IndexFile extends Command{
             String filePath = params[0];
             String tokenizerName = params[1];
             Tokenizer tokenizer = service.getTokenizer(tokenizerName);
+            if(tokenizer == null) {
+                System.out.println("Invalid Tokenizer! please try using <tokenizers> command!");
+                return;
+            }
             service.indexFile(tokenizer, filePath);
         }
         catch(RuntimeException e)

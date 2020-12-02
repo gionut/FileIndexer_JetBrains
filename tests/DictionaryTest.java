@@ -23,7 +23,7 @@ public class DictionaryTest {
     @BeforeEach
     public void setUp()
     {
-        File file = new File("E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles\\test4.TXT");
+        File file = new File("./IndexedFiles/test4.TXT");
         dictionary = new Dictionary(new WordsTokenizer(), file);
         Tokenizer tokenizer = new WordsTokenizer();
         expectedWords = new ArrayList<>();
@@ -40,13 +40,20 @@ public class DictionaryTest {
     }
 
     @Test
-    public void run_method_should_return_words_from_file()
+    /*
+    Dictionary::run method should tokenize the file in a dictionary
+     */
+    public void run_method_should_return_all_the_words_from_file()
     {
         dictionary.run();
         assertArrayEquals(dictionary.getWords().toArray(), expectedWords.toArray());
     }
 
     @Test
+    /*
+    Dictionary::run method should throw a RuntimeException if the path to the provided file was not specified
+    correctly, or if the file does not exist.
+     */
     public void run_method_should_throw_RuntimeException_for_incorrectly_specified_file()
     {
         File file1 = new File("incorrectSpecifiedFile");

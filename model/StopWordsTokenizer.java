@@ -10,11 +10,10 @@ import java.util.stream.Stream;
 
 public class StopWordsTokenizer implements Tokenizer{
     List<String> stopWords;
-    String keyword = "stopWordsTokenizer";
 
     public StopWordsTokenizer() {
         try {
-            FileReader reader = new FileReader("E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\stopWords.TXT");
+            FileReader reader = new FileReader("./stopWords.TXT");
             BufferedReader br = new BufferedReader(reader);
             stopWords = br.lines().map(String::strip).collect(Collectors.toList());
         }
@@ -24,14 +23,9 @@ public class StopWordsTokenizer implements Tokenizer{
         }
     }
 
-    @Override
-    public String getKeyword() {
-        return keyword;
-    }
-
     /*
-        Tokenize a text removing stopWords. StopWords are given in a file
-         */
+    Tokenize a text removing stopWords. StopWords are given in a file
+    */
     @Override
     public String[] tokenize(String text) {
         String[] words = text.split("\\W+");

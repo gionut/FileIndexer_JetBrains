@@ -3,13 +3,11 @@ package service;
 import model.Dictionary;
 import model.Library;
 import model.Tokenizer;
-import observer.FileWatcher;
 import repository.IRepository;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Service {
     private final IRepository repository;
@@ -46,19 +44,17 @@ public class Service {
     }
 
     /*
-    Updates the Repository with a new dictionary.
+    Updates a library in the Repository with a new dictionary.
     If there is already a library (using the same Tokenization Algorithm as the dictionary) the dictionary
-    will be merged to the already existing library. Otherwise, a new entry will be created in the repository,
+    will be merged to the already existing library.Otherwise, a new entry will be created in the repository,
     consisting of the Tokenization method and the library constructed with that method
-    The method must be synchronized because it can be possibly called by multiple threads at the same time
-    while it involves modifications over a common resource( Library ).
 
-    @params Tokenizer tokenizer - The Tokenization Algorithm
-            Dictionary dictionary - The dictionary resulted after the file was indexed;
+    @params Dictionary dictionary - The dictionary resulted after the file was indexed;
 
      */
-    private void addToLibrary(Tokenizer tokenizer, Dictionary dictionary) {
+    private void addToLibrary(Dictionary dictionary) {
 
+        Tokenizer tokenizer = dictionary.getTokenizer();
         Library library = repository.getLibrary(tokenizer);
 
         if (library == null) {
@@ -71,27 +67,10 @@ public class Service {
     }
 
     /*
-    After a file is indexed, it is being watched for possible modifications in a separate thread.
-    If a modification occurs the method FileWatcher.run() will be called.
-
-    watchFile method is accessible from multiple threads so it must be synchronized
-    @params Dictionary dictionary - the dictionary of the file that is being watched
-     */
-    private void watchFile(Dictionary dictionary)
-    {
-        FileWatcher fileWatcher = new FileWatcher(this, dictionary);
-        Thread thread = new Thread(fileWatcher);
-        //threads.add(thread);
-        thread.start();
-    }
-
-    /*
-    Indexing a new file using a given Tokenization Algorithm. The Tokenization is computed in a different thread.
-    If the Tokenization Algorithm was not used before, a new library will be created and added to the repository of libraries
-    Otherwise, a new library is created for indexing the file, but it will be reunited with the base library afterwards.
-    The base library consists of all the files that were indexed with the same Tokenization Algorithm.
-
-    The indexed file is going to be checked for modification during runtime;
+    Indexing a new file using a given Tokenization Algorithm. A new dictionary is created for the
+    specified file, containing the words of that file's tokenization. The dictionary will be merged to the
+    library constructed with the same tokenization algorithm. If such library does not exists, one
+    containing the newly created dictionary will be created and added to the repository of libraries.
 
     @params Tokenizer tokenizer - The Tokenization Algorithm
             String fileName - The file to be indexed;
@@ -100,15 +79,20 @@ public class Service {
         File file = new File(fileName);
         Dictionary dictionary = new Dictionary(tokenizer, file);
         dictionary.run();
-        watchFile(dictionary);
-        addToLibrary(tokenizer, dictionary);
+        addToLibrary(dictionary);
     }
 
     /*
     Indexing a directory means indexing all the files and subdirectories in the directory.
     Parallel Streams are 2X slower than Threads... sorry functional programming, it's not enough to be pretty :'(
 
-    The files are going to be indexed and checked for modifications in different threads;
+    The files are going to be tokenized in different threads. There is no need for synchronization because
+    no shared resources are involved in the tokenization process.
+
+    The threads will be joined later on in this method, and the dictionaries resulted are going to be added
+    to the corresponding libraries in the repository.
+
+    The method is called recursively for each subdirectory.
 
     @params Tokenizer tokenizer - The Tokenization Algorithm
             String dirNam - The directory to be indexed;
@@ -119,6 +103,21 @@ public class Service {
         if(listOfFiles == null)
             return;
 
+        // parallel streams approach ( 2X slower)--TESTED--
+        //dictionaries = dictionaries.stream().parallel().map(Dictionary::index).collect(Collectors.toList());
+
+        indexFiles(tokenizer, Arrays.asList(listOfFiles));
+    }
+
+    /*
+    Called directly by Service::indexDirectory method. It handles Thread creation and joining for each file
+    that is needed to be tokenized, calls Service::indexDirectory for subdirectories and adds the newly
+    created directories to the corresponding libraries in the repository through Service::addToLibrary method
+
+    @params Tokenizer tokenizer - the tokenization algorithm used to index the files
+            List<File> listOfFiles - the list of files that is going to be indexed with the tokenizer
+     */
+    private void indexFiles(Tokenizer tokenizer, List<File> listOfFiles) {
         List<Dictionary> dictionaries = new ArrayList<>();
         List<Thread> threads = new ArrayList<>();
 
@@ -126,7 +125,7 @@ public class Service {
             if (file.isFile()) {
                 Dictionary dictionary = new Dictionary(tokenizer, file);
                 dictionaries.add(dictionary);
-                watchFile(dictionary);
+
                 Thread thread = new Thread(dictionary);
                 threads.add(thread);
                 thread.start();
@@ -136,25 +135,28 @@ public class Service {
             }
         }
 
-        try {
-            for (Thread thread : threads) {
+        try
+        {
+            for(Thread thread : threads)
+            {
                 thread.join();
             }
-        }catch(InterruptedException e)
+        }
+        catch(InterruptedException e)
         {
             throw new RuntimeException("Indexing directory failed");
         }
-        // parallel streams approach ( 2X slower)
-        //dictionaries = dictionaries.stream().parallel().map(Dictionary::index).collect(Collectors.toList());
 
-        for (Dictionary dictionary : dictionaries) {
-            addToLibrary(tokenizer, dictionary);
-        }
+        dictionaries.forEach(this::addToLibrary);
     }
 
 
     /*
     Query for a word in the indexed files
+
+    If some files have been modified during runtime( state persistence between running session is not required )
+    their corresponding dictionaries will be removed from the library they were added and the files will be indexed
+    again
 
     @params String word - the word to query for
             Tokenizer tokenizer - the Tokenization Algorithm for the libraries that are going to be queried
@@ -162,8 +164,46 @@ public class Service {
     */
     public Set<File> query(Tokenizer tokenizer, String word)
     {
+        if(word.isEmpty())
+            return new HashSet<>();
+
         Library library = repository.getLibrary(tokenizer);
-        return library.getFiles(word.toLowerCase());
+        updateLibrary(library);
+
+        Set<Dictionary> dictionaries = library.getDictionaries(word.toLowerCase());
+
+        if(dictionaries == null)
+           return new HashSet<>();
+
+        return dictionaries.stream().map(Dictionary::getFile)
+                                    .collect(Collectors.toSet());
     }
 
+    /*
+    Directly called by Service::query(). Checks if there are files that have been modified since the last
+    indexation. If so, the dictionaries corresponding to the modified files will be removed from the
+    library they were added earlier. The modified files will be indexed again.
+
+    @params Library library - the library from which we remove the corrupted dictionaries
+     */
+    private void updateLibrary(Library library) {
+
+        List<File> modifiedFiles = new ArrayList<>();
+        Set<Dictionary> dictionaries = library.getFileWatcher();
+        List<Dictionary> corruptedDictionary = new ArrayList<>();
+
+        for(Iterator<Dictionary> iterator = dictionaries.iterator(); iterator.hasNext();)
+        {
+            Dictionary dictionary = iterator.next();
+            if(dictionary.hasBeenModified())
+            {
+                corruptedDictionary.add(dictionary);
+                modifiedFiles.add(dictionary.getFile());
+            }
+        }
+
+        corruptedDictionary.forEach(library::removeDictionary);
+
+        indexFiles(library.getTokenizer(), modifiedFiles);
+    }
 }

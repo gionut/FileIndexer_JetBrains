@@ -1,0 +1,42 @@
+tokenizers
+exit
+query
+indexFile
+manual
+indexDir
+
+>>indexDir asdsa 123ds
+Invalid Tokenizer! please try using <tokenizers> command!
+
+>>tokenizers
+stopWordsTokenizer
+wordsTokenizer
+
+>>indexDir ./IndexedFiles wordsTokenizer
+
+>>query the wordsTokenizer
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\test4.TXT
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\test5.TXT
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\test1.TXT
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\subdir\test2.TXT
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\subdir\test3.TXT
+
+>>query the wordsTokenizer
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\test5.TXT
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\test1.TXT
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\subdir\test2.TXT
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\subdir\test3.TXT
+
+>>query riding wordsTokenizer
+
+>>query riding wordsTokenizer
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\test4.TXT
+
+>>indexFile ./IndexedFiles/test1.TXT stopWordsTokenizer
+
+>>query the stopWordsTokenizer
+
+>>query Peter stopWordsTokenizer
+C:\Users\lenovo\Documents\GitHub\FileIndexer_JetBrains\.\IndexedFiles\test1.TXT
+
+>>

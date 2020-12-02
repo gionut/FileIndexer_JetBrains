@@ -11,8 +11,7 @@ import service.Service;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ServiceTest {
     Service service;
@@ -24,9 +23,12 @@ public class ServiceTest {
     }
 
     @Test
-    public void IndexFile_addToLibrary_should_add_indexed_file_to_Library()
+    /*
+    after a file is indexed, the dictionary that contains the file should be added to the Library
+     */
+    public void indexFile_should_add_the_dictionary_to_Library()
     {
-        String file = "E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles\\test4.TXT";
+        String file = "./IndexedFiles/test4.TXT";
         Tokenizer tokenizer = new WordsTokenizer();
         service.indexFile(tokenizer, file);
 
@@ -34,9 +36,13 @@ public class ServiceTest {
     }
 
     @Test
-    public void IndexFile_watchFile_if_file_modified_remove_from_library_and_index_again()
+    /*
+    If a file has been modified between the indexation and the query, the query should return an updated
+    result
+     */
+    public void query_for_word_if_file_modified_should_bring_updated_results()
     {
-        String file = "E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles\\test4.TXT";
+        String file = "./IndexedFiles/test4.TXT";
         Tokenizer tokenizer = new WordsTokenizer();
         service.indexFile(tokenizer, file);
 
@@ -45,7 +51,7 @@ public class ServiceTest {
             writer.print("\0");
             writer.close();
 
-            assertEquals(service.getLibrary(tokenizer).getLibrary().size(), 0);
+            assertEquals(0, service.query(tokenizer, "the").size());
 
             writer = new PrintWriter(file);
             writer.print("\"Little Red Riding Hood\" is a European fairy tale about a young girl and a Big Bad Wolf. Its origins can be traced back to the 10th century to several European folk tales, including one from Italy called The False Grandmother. The best known version was written by Charles Perrault.");
@@ -56,9 +62,9 @@ public class ServiceTest {
     }
 
     @Test
-    public void IndexDirectory_add_to_library()
+    public void indexDirectory_add_to_library()
     {
-        String file = "E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles";
+        String file = "./IndexedFiles";
         Tokenizer tokenizer = new WordsTokenizer();
         service.indexDirectory(tokenizer, file);
 
@@ -66,10 +72,13 @@ public class ServiceTest {
     }
 
     @Test
-    public void IndexDirectory_watchFiles_if_file_modified_remove_from_library_and_index_again()
+    /*
+    If the a directory was indexed and a file was modified afterwards, a query should return updated results
+     */
+    public void query_for_word_if_one_file_in_directory_modified_should_bring_updated_results()
     {
-        String dir = "E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles";
-        String file = "E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles\\test4.TXT";
+        String dir = "./IndexedFiles";
+        String file = "./IndexedFiles/test4.TXT";
         Tokenizer tokenizer = new WordsTokenizer();
         service.indexDirectory(tokenizer, dir);
 
@@ -78,7 +87,7 @@ public class ServiceTest {
             writer.print("\0");
             writer.close();
 
-            assertEquals(4, service.getLibrary(tokenizer).getLibrary().get("the").size());
+            assertEquals(4, service.query(tokenizer, "the").size());
 
             writer = new PrintWriter(file);
             writer.print("\"Little Red Riding Hood\" is a European fairy tale about a young girl and a Big Bad Wolf. Its origins can be traced back to the 10th century to several European folk tales, including one from Italy called The False Grandmother. The best known version was written by Charles Perrault.");
@@ -89,9 +98,9 @@ public class ServiceTest {
     }
 
     @Test
-    public void Query_should_return_indexed_files_that_contain_word()
+    public void Query_for_a_word_should_return_files_that_contain_the_word()
     {
-        String dir = "E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles";
+        String dir = "./IndexedFiles";
         Tokenizer tokenizer = new WordsTokenizer();
         service.indexDirectory(tokenizer, dir);
 

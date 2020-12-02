@@ -8,9 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class Repository implements IRepository{
-    Map<Tokenizer, Library> libraries;
-    Map<String, Tokenizer> tokenizers;
-    //maybe keep a fileTable so we don't create one each time we want access a file?
+    private final Map<Tokenizer, Library> libraries;
+    private final Map<String, Tokenizer> tokenizers;
 
     public Repository()
     {

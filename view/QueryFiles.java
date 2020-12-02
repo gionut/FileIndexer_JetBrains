@@ -27,9 +27,13 @@ public class QueryFiles extends Command{
             String tokenizerName = params[1];
             Tokenizer tokenizer = service.getTokenizer(tokenizerName);
 
+            if(tokenizer == null) {
+                System.out.println("Invalid Tokenizer! please try using <tokenizers> command!");
+                return;
+            }
             Set<File> files = service.query(tokenizer, word);
 
-            if(files == null)
+            if(files.isEmpty())
                 System.out.println("the word '" + word + "' could not be found");
             else {
                 for (File file : files) {

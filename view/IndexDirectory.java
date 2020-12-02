@@ -24,6 +24,10 @@ public class IndexDirectory extends Command{
             String directoryPath = params[0];
             String tokenizerName = params[1];
             Tokenizer tokenizer = service.getTokenizer(tokenizerName);
+            if(tokenizer == null) {
+                System.out.println("Invalid Tokenizer! please try using <tokenizers> command!");
+                return;
+            }
             service.indexDirectory(tokenizer, directoryPath);
         }
         catch(RuntimeException e)

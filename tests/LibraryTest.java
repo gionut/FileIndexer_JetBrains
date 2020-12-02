@@ -5,7 +5,8 @@ import org.junit.jupiter.api.*;
 
 import java.io.File;
 
-import static junit.framework.Assert.assertEquals;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LibraryTest {
     Library library;
@@ -15,8 +16,8 @@ public class LibraryTest {
     @BeforeEach
     public void setUp()
     {
-        File file1 = new File("E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles\\test4.TXT");
-        File file2 = new File("E:\\IONUT\\Semestrul3\\JetBrainsFileIndexing\\src\\IndexedFiles\\test1.TXT");
+        File file1 = new File("./IndexedFiles/test4.TXT");
+        File file2 = new File("./IndexedFiles/test1.TXT");
 
         dictionary1 = new Dictionary(new WordsTokenizer(), file1);
         dictionary2 = new Dictionary(new WordsTokenizer(), file2) ;
@@ -28,7 +29,11 @@ public class LibraryTest {
     }
 
     @Test
-    public void Library_add_should_add_a_dictionary_to_the_library_specific_words_should_map_specific_files()
+    /*
+    Library::add adds a dictionary containing the words of a tokenized file into the library.
+    wordsTable field in Library should contain now the words in that file
+     */
+    public void add_method_should_add_a_dictionary_to_the_library()
     {
         library.add(dictionary1);
         library.add(dictionary2);
@@ -36,20 +41,12 @@ public class LibraryTest {
     }
 
     @Test
-    public void Library_add_should_add_a_second_dictionary_to_the_library_common_words_should_map_two_files()
-    {
-        library.add(dictionary1);
-        library.add(dictionary2);
-        assertEquals(library.getLibrary().get("the").size(), 2);
-    }
-
-    @Test
-    public void Library_RemoveDictionary_should_remove_occurrences_of_dictionary_file_from_library()
+    public void removeDictionary_should_remove_dictionary_from_library()
     {
         library.add(dictionary1);
         library.add(dictionary2);
         library.removeDictionary(dictionary1);
-        assertEquals(library.getFiles("the").size(), 1);
+        assertEquals(library.getDictionaries("the").size(), 1);
     }
 
     @AfterEach

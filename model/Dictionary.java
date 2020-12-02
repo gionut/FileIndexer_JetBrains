@@ -11,37 +11,51 @@ public class Dictionary implements Runnable{
     private final List<String> words;
     private final Tokenizer tokenizer;
     private final File file;
+    private final long lastModification;
 
     public Dictionary(Tokenizer tokenizer, File file)
     {
         this.tokenizer = tokenizer;
         this.file = file ;
+        lastModification = file.lastModified();
         this.words = new ArrayList<>();
     }
 
     /*
-    @returns List<String> - the list containing the words that index the file
+    Checks if the file referenced by the file field has been modified since the last indexation
      */
+    public boolean hasBeenModified()
+    {
+        return this.lastModification != file.lastModified();
+    }
+
+    /*
+    @returns List<String> - the list containing the words that resulted from the tokenization of the file
+    */
     public List<String> getWords() {
         return this.words;
     }
 
     /*
-    @returns File - the indexed file
+    @returns File - the file that was tokenized in the dictionary
      */
     public File getFile() {
         return file;
     }
 
     /*
-    @returns Tokenizer - the Tokenization algorithm that was used to index the file
+    @returns Tokenizer - the Tokenization algorithm that was used to tokenize the file
      */
     public Tokenizer getTokenizer() {
         return tokenizer;
     }
 
-    /*for using parallel streams in  Service.indexDirectory method. it does exactly what run method does, but it also
-     returns the current(modified) dictionary*/
+    /*
+    Only for using parallel streams in  Service.indexDirectory method. it does exactly what run method does,
+    but it also returns the current(modified) dictionary
+
+    @throws RuntimeException if the file provided cannot be accessed
+    */
     public Dictionary index()
     {
         try {
@@ -63,15 +77,9 @@ public class Dictionary implements Runnable{
     /*
     Indexing a file requires splitting the text into words whose meaning is defined by
     the Tokenization algorithm.
-    The List<String> words field will be updated to contain the words that index the file
+    The List<String> words field will be updated to contain the tokenized words in the file
 
-    if the file provided cannot be accessed ...
-
-    the whole operation parses two or three times the content of the file.
-    A low level approach in which only one byte at a time is processed could manage to do the job in one parse.
-    The overall complexity would remain the same(O(n) - linear time, where n is the number of bytes in the file), but
-    the effort will be unmeasurable higher. Consequently, I decided to use that time to provide other functionalities or
-    improvements that are more doable and extensive at the same time. Hope you don't mind, reader.
+    @throws RuntimeException if the file provided cannot be accessed
     */
     public void run() {
         try {

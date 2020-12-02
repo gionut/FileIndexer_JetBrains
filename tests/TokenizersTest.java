@@ -34,10 +34,4 @@ public class TokenizersTest {
         String[] words = stopWordsTokenizer.tokenize(text);
         assertArrayEquals(words, expectedResult);
     }
-
-    public void run()
-    {
-        wordsTokenizer_tokenize_should_return_words_in_String();
-        StopWordsTokenizer_should_return_words_in_string_without_stopWords();
-    }
 }
